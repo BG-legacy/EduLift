@@ -1,0 +1,211 @@
+{
+  "users_collection_validation": {
+    "$jsonSchema": {
+      "bsonType": "object",
+      "title": "User Schema Validation",
+      "required": ["roles", "email", "createdAt"],
+      "properties": {
+        "_id": {
+          "bsonType": "objectId",
+          "description": "Unique identifier for the user"
+        },
+        "roles": {
+          "bsonType": "array",
+          "description": "User roles - required field",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "bsonType": "string",
+            "enum": ["student", "mentor", "counselor", "admin"]
+          }
+        },
+        "groupHomeId": {
+          "bsonType": "string",
+          "description": "Group home identifier - indexed field",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "profile": {
+          "bsonType": "object",
+          "description": "User profile information",
+          "properties": {
+            "firstName": {
+              "bsonType": "string",
+              "maxLength": 50
+            },
+            "lastName": {
+              "bsonType": "string",
+              "maxLength": 50
+            },
+            "phoneNumber": {
+              "bsonType": "string",
+              "pattern": "^[+]?[1-9]?[0-9]{7,15}$"
+            },
+            "dateOfBirth": {
+              "bsonType": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+            },
+            "address": {
+              "bsonType": "string",
+              "maxLength": 200
+            },
+            "emergencyContact": {
+              "bsonType": "string",
+              "maxLength": 100
+            },
+            "emergencyPhoneNumber": {
+              "bsonType": "string",
+              "pattern": "^[+]?[1-9]?[0-9]{7,15}$"
+            },
+            "additionalInfo": {
+              "bsonType": "object"
+            }
+          }
+        },
+        "consentFlags": {
+          "bsonType": "object",
+          "description": "User consent information",
+          "properties": {
+            "dataProcessingConsent": {
+              "bsonType": "bool"
+            },
+            "communicationConsent": {
+              "bsonType": "bool"
+            },
+            "emergencyContactConsent": {
+              "bsonType": "bool"
+            },
+            "photoVideoConsent": {
+              "bsonType": "bool"
+            },
+            "consentTimestamp": {
+              "bsonType": "date"
+            }
+          }
+        },
+        "preferences": {
+          "bsonType": "object",
+          "description": "User preferences",
+          "properties": {
+            "language": {
+              "bsonType": "string",
+              "enum": ["en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko", "ar"],
+              "default": "en"
+            },
+            "timezone": {
+              "bsonType": "string",
+              "default": "UTC",
+              "maxLength": 50
+            },
+            "emailNotifications": {
+              "bsonType": "bool",
+              "default": true
+            },
+            "smsNotifications": {
+              "bsonType": "bool",
+              "default": false
+            },
+            "pushNotifications": {
+              "bsonType": "bool",
+              "default": true
+            },
+            "customPreferences": {
+              "bsonType": "object"
+            }
+          }
+        },
+        "riskFlags": {
+          "bsonType": "array",
+          "description": "Array of risk indicators",
+          "items": {
+            "bsonType": "string",
+            "enum": [
+              "academic_risk",
+              "behavioral_risk", 
+              "attendance_risk",
+              "emotional_risk",
+              "substance_risk",
+              "family_risk",
+              "financial_risk",
+              "health_risk",
+              "social_risk",
+              "housing_risk"
+            ]
+          }
+        },
+        "createdAt": {
+          "bsonType": "date",
+          "description": "User creation timestamp - required field"
+        },
+        "email": {
+          "bsonType": "string",
+          "description": "User email - unique indexed field",
+          "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+          "maxLength": 255
+        },
+        "username": {
+          "bsonType": "string",
+          "description": "Legacy field - username",
+          "maxLength": 50
+        },
+        "firstName": {
+          "bsonType": "string",
+          "description": "Legacy field - first name",
+          "maxLength": 50
+        },
+        "lastName": {
+          "bsonType": "string",
+          "description": "Legacy field - last name",
+          "maxLength": 50
+        },
+        "updatedAt": {
+          "bsonType": "date",
+          "description": "Last update timestamp"
+        }
+      }
+    }
+  },
+  "indexes": [
+    {
+      "name": "email_unique_index",
+      "key": { "email": 1 },
+      "unique": true,
+      "sparse": true
+    },
+    {
+      "name": "groupHomeId_index",
+      "key": { "groupHomeId": 1 }
+    },
+    {
+      "name": "roles_index", 
+      "key": { "roles": 1 }
+    },
+    {
+      "name": "roles_groupHomeId_compound_index",
+      "key": { "roles": 1, "groupHomeId": 1 }
+    },
+    {
+      "name": "createdAt_desc_index",
+      "key": { "createdAt": -1 }
+    },
+    {
+      "name": "riskFlags_index",
+      "key": { "riskFlags": 1 }
+    }
+  ],
+  "mongodb_commands": {
+    "create_collection_with_validation": "db.createCollection('users', { validator: { $jsonSchema: { /* schema above */ } } })",
+    "create_indexes": [
+      "db.users.createIndex({ 'email': 1 }, { unique: true, sparse: true })",
+      "db.users.createIndex({ 'groupHomeId': 1 })",
+      "db.users.createIndex({ 'roles': 1 })",
+      "db.users.createIndex({ 'roles': 1, 'groupHomeId': 1 })",
+      "db.users.createIndex({ 'createdAt': -1 })",
+      "db.users.createIndex({ 'riskFlags': 1 })"
+    ]
+  },
+  "ttl_considerations": {
+    "note": "TTL (Time To Live) not implemented for users collection as user data should be retained indefinitely for compliance and historical purposes",
+    "alternative_approach": "Consider implementing soft deletes with an 'isActive' boolean field and a separate cleanup process for anonymization after legal retention periods"
+  }
+}
